@@ -1,9 +1,13 @@
-from src.ingestion import load_and_split_document, create_vector_store
+from src.retrieval import get_retriever
 
-chunks = load_and_split_document("data/COS324_Course_Notes_princeton.pdf")
+retriever = get_retriever()
 
-print("Chunks created:", len(chunks))
+query = "What is machine learning?"
 
-vectorstore = create_vector_store(chunks)
+docs = retriever.invoke(query)
 
-print("Vector DB created successfully!")
+print("\nTop Results:\n")
+
+for i, doc in enumerate(docs):
+    print(f"\nResult {i+1}:\n")
+    print(doc.page_content[:300])
