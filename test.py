@@ -1,4 +1,5 @@
 from src.retrieval import get_retriever
+from src.generation import generate_answer
 
 retriever = get_retriever()
 
@@ -6,8 +7,7 @@ query = "What is machine learning?"
 
 docs = retriever.invoke(query)
 
-print("\nTop Results:\n")
+answer = generate_answer(query, docs)
 
-for i, doc in enumerate(docs):
-    print(f"\nResult {i+1}:\n")
-    print(doc.page_content[:300])
+print("\nFinal Answer:\n")
+print(answer)
