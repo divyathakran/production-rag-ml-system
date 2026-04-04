@@ -5,3 +5,4 @@ langchain-text-splitters
 sentence-transformers
 chromadb
 transformers
+rank_bm25

@@ -2,6 +2,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma 
+import pickle
 
 def load_and_split_document(file_path):
     loader = PyPDFLoader(file_path)
@@ -26,5 +27,8 @@ def create_vector_store(chunks):
         persist_directory="db"
     )
 
-    vectorstore.persist()
     return vectorstore
+
+# After chunking
+with open("data/chunks.pkl", "wb") as f:
+    pickle.dump(chunks, f)
