@@ -1,6 +1,7 @@
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from src.bm25_retrieval import BM25Retriever
+from src.reranker import CrossEncoderReranker
 
 def get_retriever():
     embeddings = HuggingFaceEmbeddings(
@@ -18,24 +19,23 @@ def get_retriever():
 
     return retriever
 
-
-
 class HybridRetriever:
     def __init__(self, vector_db):
         self.vector_db = vector_db
         self.bm25 = BM25Retriever()
+        self.reranker = CrossEncoderReranker()
 
     def retrieve(self, query, top_k=5):
-        # 1. Vector results
-        vector_results = self.vector_db.similarity_search(query, k=top_k)
+        #step 1: get more candidates
+        vector_results = self.vector_db.similarity_search(query, k=10)
+        vector_texts = [doc.page_content for doc in vector_results]
 
-        # 2. BM25 results
-        bm25_results = self.bm25.retrieve(query, top_k=top_k)
+        bm25_results = self.bm25.retrieve(query, top_k=10)
 
-        # 3. Combine
-        combined = vector_results + bm25_results
+        #step 2: combine
+        combined = list(set(vector_texts + bm25_results))
 
-        # 4. Remove duplicates
-        unique = list(set(combined))
+        #step 3: rerank
+        reranked = self.reranker.rerank(query, combined, top_k=top_k)
 
-        return unique[:top_k]
+        return reranked
