@@ -6,3 +6,4 @@ sentence-transformers
 chromadb
 transformers
 rank_bm25
+pyyaml

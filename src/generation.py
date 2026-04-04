@@ -1,4 +1,5 @@
 from transformers import pipeline
+import yaml
 
 generator = pipeline("text-generation", model="gpt2")
 
@@ -19,23 +20,12 @@ def generate_answer(query, docs):
     # 🔥 LIMIT context size (VERY IMPORTANT)
     context = "\n\n".join([doc.page_content[:300] for doc in docs[:3]])
 
-    prompt = f"""
-You are a strict question answering system.
+    template = load_prompt()
 
-Answer ONLY using the provided context.
-Do NOT use outside knowledge.
-
-If the context does not contain enough information, respond EXACTLY with:
-"I cannot find sufficient information in the provided documents."
-
-Context:
-{context}
-
-Question:
-{query}
-
-Answer:
-"""
+    prompt = template.format(
+    context=context,
+    query=query
+    )
 
     result = generator(
         prompt,
@@ -54,3 +44,8 @@ Answer:
         return "I cannot find sufficient information in the provided documents."
 
     return answer
+
+def load_prompt():
+    with open("config/prompts.yaml", "r") as f:
+        prompts = yaml.safe_load(f)
+    return prompts["qa_prompt"]
