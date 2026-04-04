@@ -2,14 +2,31 @@ from transformers import pipeline
 
 generator = pipeline("text-generation", model="gpt2")
 
+def is_answer_supported(answer, docs):
+    context_text = " ".join([doc.page_content for doc in docs]).lower()
+    answer = answer.lower()
+
+    # Check overlap
+    match_count = sum(
+        1 for word in answer.split()
+        if word in context_text
+    )
+
+    return match_count > 5
+
+
 def generate_answer(query, docs):
     # 🔥 LIMIT context size (VERY IMPORTANT)
     context = "\n\n".join([doc.page_content[:300] for doc in docs[:3]])
 
     prompt = f"""
-You are a helpful AI assistant.
+You are a strict question answering system.
 
-Answer the question in a clear and concise way using ONLY the context below.
+Answer ONLY using the provided context.
+Do NOT use outside knowledge.
+
+If the context does not contain enough information, respond EXACTLY with:
+"I cannot find sufficient information in the provided documents."
 
 Context:
 {context}
@@ -27,6 +44,13 @@ Answer:
         temperature=0.3
     )
 
-    answer = result[0]["generated_text"]
+    generated_text = result[0]["generated_text"]
 
-    return answer.split("Answer:")[-1].strip()
+    #extract only the answer part
+    answer = generated_text.split("Answer:")[-1].strip()
+
+    # CITATION ENFORCEMENT
+    if not is_answer_supported(answer, docs):
+        return "I cannot find sufficient information in the provided documents."
+
+    return answer
